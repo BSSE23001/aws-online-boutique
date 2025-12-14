@@ -139,9 +139,9 @@ const (
     avoidNoopCurrencyConversionRPC = false
 )
 
-// MOCKED: Returns static currencies to avoid crashing
+// MOCKED: Returns static currencies
 func (fe *frontendServer) getCurrencies(ctx context.Context) ([]string, error) {
-    return []string{"USD", "EUR", "CAD"}, nil
+    return []string{"USD", "EUR", "CAD", "GBP"}, nil
 }
 
 // REAL: Keeps connecting to the Product Catalog Service (Do not touch)
@@ -183,21 +183,38 @@ func (fe *frontendServer) convertCurrency(ctx context.Context, money *pb.Money, 
     }, nil
 }
 
-// MOCKED: Returns static free shipping ($0)
+// MOCKED: Returns a flat $5.00 shipping rate
 func (fe *frontendServer) getShippingQuote(ctx context.Context, items []*pb.CartItem, currency string) (*pb.Money, error) {
     return &pb.Money{
         CurrencyCode: currency,
-        Units:        0,
+        Units:        5,
         Nanos:        0,
     }, nil
 }
 
-// MOCKED: Returns empty recommendations
+// MOCKED: Returns one dummy recommendation
 func (fe *frontendServer) getRecommendations(ctx context.Context, userID string, productIDs []string) ([]*pb.Product, error) {
-    return []*pb.Product{}, nil
+    return []*pb.Product{
+        {
+            Id:          "1YMWWN1N4O",
+            Name:        "Recommended Watch",
+            Description: "A cool watch",
+            Picture:     "/static/img/products/watch.jpg",
+            PriceUsd: &pb.Money{
+                CurrencyCode: "USD",
+                Units:        109,
+                Nanos:        990000000,
+            },
+        },
+    }, nil
 }
 
-// MOCKED: Returns empty ads
+// MOCKED: Returns one dummy Ad (Prevents "invalid argument to Intn" panic)
 func (fe *frontendServer) getAd(ctx context.Context, ctxKeys []string) ([]*pb.Ad, error) {
-    return []*pb.Ad{}, nil
+    return []*pb.Ad{
+        {
+            RedirectUrl: "/product/1YMWWN1N4O",
+            Text:        "Ad: Check out our Watch!",
+        },
+    }, nil
 }
