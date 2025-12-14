@@ -133,8 +133,6 @@ import (
     // "time" // Removed as we don't need timeouts for mocks
 
     pb "github.com/GoogleCloudPlatform/microservices-demo/src/frontend/genproto"
-
-    "github.com/pkg/errors"
 )
 
 const (
