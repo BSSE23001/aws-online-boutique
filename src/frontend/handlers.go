@@ -123,6 +123,32 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (fe *frontendServer) adminHandler(w http.ResponseWriter, r *http.Request) {
+	// 1. Get the API URL from the Environment Variable
+	apiUrl := os.Getenv("ADD_PRODUCT_API_URL")
+	if apiUrl == "" {
+		// Fallback for safety (or handling error)
+		apiUrl = "/error-api-url-not-set"
+	}
+
+	// 2. Prepare data for the template
+	type AdminPageData struct {
+		ApiUrl string
+		// We include common data like cart size/currency if needed by header
+		SessionID string
+	}
+
+	data := AdminPageData{
+		ApiUrl:    apiUrl,
+		SessionID: sessionID(r),
+	}
+
+	// 3. Render the 'admin.html' template
+	if err := templates.ExecuteTemplate(w, "admin", data); err != nil {
+		log.Error(err, "could not execute admin template")
+	}
+}
+
 func (plat *platformDetails) setPlatformDetails(env string) {
 	if env == "aws" {
 		plat.provider = "AWS"
