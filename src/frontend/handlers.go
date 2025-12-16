@@ -124,28 +124,50 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (fe *frontendServer) adminHandler(w http.ResponseWriter, r *http.Request) {
-	// 1. Get the API URL from the Environment Variable
+	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+
+	// 1. Get API URL
 	apiUrl := os.Getenv("ADD_PRODUCT_API_URL")
 	if apiUrl == "" {
-		// Fallback for safety (or handling error)
 		apiUrl = "/error-api-url-not-set"
 	}
 
-	// 2. Prepare data for the template
-	type AdminPageData struct {
-		ApiUrl string
-		// We include common data like cart size/currency if needed by header
-		SessionID string
+	// 2. Fetch dependencies for the Header (Currency & Cart)
+	// Even though it's an admin page, the header needs these to render the dropdowns
+	currencies, err := fe.getCurrencies(r.Context())
+	if err != nil {
+		// Just log warning and continue (don't crash the admin page for this)
+		log.Warn("could not retrieve currencies for admin page")
+		currencies = []string{"USD"} // fallback
 	}
 
-	data := AdminPageData{
-		ApiUrl:    apiUrl,
-		SessionID: sessionID(r),
+	cart, err := fe.getCart(r.Context(), sessionID(r))
+	if err != nil {
+		log.Warn("could not retrieve cart for admin page")
+		cart = []*pb.CartItem{} // fallback
 	}
 
-	// 3. Render the 'admin.html' template
+	// 3. Prepare the Data Map (Matching productHandler)
+	// We add "api_url" specific to this page, and all the "platform" stuff for the header
+	data := map[string]interface{}{
+		"api_url":           apiUrl, // <--- Specific to Admin
+		"session_id":        sessionID(r),
+		"request_id":        r.Context().Value(ctxKeyRequestID{}),
+		"user_currency":     currentCurrency(r),
+		"show_currency":     true,
+		"currencies":        currencies,
+		"cart_size":         cartSize(cart),
+		"platform_css":      plat.css,             // Global var from main.go
+		"platform_name":     plat.provider,        // Global var from main.go
+		"is_cymbal_brand":   isCymbalBrand,        // Global var from main.go
+		"deploymentDetails": deploymentDetailsMap, // Global var from main.go
+		"frontendMessage":   frontendMessage,      // Global var from main.go
+	}
+
+	// 4. Render
 	if err := templates.ExecuteTemplate(w, "admin", data); err != nil {
 		log.Error(err, "could not execute admin template")
+		http.Error(w, "Internal Server Error: "+err.Error(), http.StatusInternalServerError)
 	}
 }
 
