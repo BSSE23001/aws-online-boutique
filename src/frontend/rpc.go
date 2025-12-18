@@ -1,17 +1,3 @@
-// Copyright 2018 Google LLC
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 // package main
 
 // import (
@@ -129,92 +115,92 @@
 package main
 
 import (
-    "context"
-    // "time" // Removed as we don't need timeouts for mocks
+	"context"
+	// "time" // Removed as we don't need timeouts for mocks
 
-    pb "github.com/GoogleCloudPlatform/microservices-demo/src/frontend/genproto"
+	pb "github.com/GoogleCloudPlatform/microservices-demo/src/frontend/genproto"
 )
 
 const (
-    avoidNoopCurrencyConversionRPC = false
+	avoidNoopCurrencyConversionRPC = false
 )
 
 // MOCKED: Returns static currencies
 func (fe *frontendServer) getCurrencies(ctx context.Context) ([]string, error) {
-    return []string{"USD", "EUR", "CAD", "GBP"}, nil
+	return []string{"USD", "EUR", "CAD", "GBP"}, nil
 }
 
 // REAL: Keeps connecting to the Product Catalog Service (Do not touch)
 func (fe *frontendServer) getProducts(ctx context.Context) ([]*pb.Product, error) {
-    resp, err := pb.NewProductCatalogServiceClient(fe.productCatalogSvcConn).
-        ListProducts(ctx, &pb.Empty{})
-    return resp.GetProducts(), err
+	resp, err := pb.NewProductCatalogServiceClient(fe.productCatalogSvcConn).
+		ListProducts(ctx, &pb.Empty{})
+	return resp.GetProducts(), err
 }
 
 // REAL: Keeps connecting to the Product Catalog Service (Do not touch)
 func (fe *frontendServer) getProduct(ctx context.Context, id string) (*pb.Product, error) {
-    resp, err := pb.NewProductCatalogServiceClient(fe.productCatalogSvcConn).
-        GetProduct(ctx, &pb.GetProductRequest{Id: id})
-    return resp, err
+	resp, err := pb.NewProductCatalogServiceClient(fe.productCatalogSvcConn).
+		GetProduct(ctx, &pb.GetProductRequest{Id: id})
+	return resp, err
 }
 
 // MOCKED: Returns empty cart items
 func (fe *frontendServer) getCart(ctx context.Context, userID string) ([]*pb.CartItem, error) {
-    return []*pb.CartItem{}, nil
+	return []*pb.CartItem{}, nil
 }
 
 // MOCKED: Does nothing (No-op)
 func (fe *frontendServer) emptyCart(ctx context.Context, userID string) error {
-    return nil
+	return nil
 }
 
 // MOCKED: Does nothing (No-op)
 func (fe *frontendServer) insertCart(ctx context.Context, userID, productID string, quantity int32) error {
-    return nil
+	return nil
 }
 
 // MOCKED: Returns the same amount but changes the currency code (Fake conversion)
 func (fe *frontendServer) convertCurrency(ctx context.Context, money *pb.Money, currency string) (*pb.Money, error) {
-    // Just return the same numbers but with the new currency label
-    return &pb.Money{
-        CurrencyCode: currency,
-        Units:        money.Units,
-        Nanos:        money.Nanos,
-    }, nil
+	// Just return the same numbers but with the new currency label
+	return &pb.Money{
+		CurrencyCode: currency,
+		Units:        money.Units,
+		Nanos:        money.Nanos,
+	}, nil
 }
 
 // MOCKED: Returns a flat $5.00 shipping rate
 func (fe *frontendServer) getShippingQuote(ctx context.Context, items []*pb.CartItem, currency string) (*pb.Money, error) {
-    return &pb.Money{
-        CurrencyCode: currency,
-        Units:        5,
-        Nanos:        0,
-    }, nil
+	return &pb.Money{
+		CurrencyCode: currency,
+		Units:        5,
+		Nanos:        0,
+	}, nil
 }
 
 // MOCKED: Returns one dummy recommendation
 func (fe *frontendServer) getRecommendations(ctx context.Context, userID string, productIDs []string) ([]*pb.Product, error) {
-    return []*pb.Product{
-        {
-            Id:          "1YMWWN1N4O",
-            Name:        "Recommended Watch",
-            Description: "A cool watch",
-            Picture:     "/static/img/products/watch.jpg",
-            PriceUsd: &pb.Money{
-                CurrencyCode: "USD",
-                Units:        109,
-                Nanos:        990000000,
-            },
-        },
-    }, nil
+	return []*pb.Product{
+		{
+			Id:          "1YMWWN1N4O",
+			Name:        "Recommended Watch",
+			Description: "A cool watch",
+			Picture:     "/static/img/products/watch.jpg",
+			PriceUsd: &pb.Money{
+				CurrencyCode: "USD",
+				Units:        109,
+				Nanos:        990000000,
+			},
+		},
+	}, nil
 }
 
 // MOCKED: Returns one dummy Ad (Prevents "invalid argument to Intn" panic)
 func (fe *frontendServer) getAd(ctx context.Context, ctxKeys []string) ([]*pb.Ad, error) {
-    return []*pb.Ad{
-        {
-            RedirectUrl: "/product/1YMWWN1N4O",
-            Text:        "Ad: Check out our Watch!",
-        },
-    }, nil
+	return []*pb.Ad{
+		{
+			RedirectUrl: "/product/1YMWWN1N4O",
+			Text:        "Ad: Check out our Watch!",
+		},
+	}, nil
 }

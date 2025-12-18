@@ -19,12 +19,12 @@ package hipstershop
 
 import (
 	fmt "fmt"
-	proto "github.com/golang/protobuf/proto"
 	math "math"
-)
 
-import (
+	proto "github.com/golang/protobuf/proto"
+
 	context "golang.org/x/net/context"
+
 	grpc "google.golang.org/grpc"
 )
 
