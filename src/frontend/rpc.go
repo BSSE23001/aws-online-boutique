@@ -1,12 +1,3 @@
-// import (
-// 	"context"
-// 	"time"
-
-// 	pb "github.com/GoogleCloudPlatform/microservices-demo/src/frontend/genproto"
-
-// 	"github.com/pkg/errors"
-// )
-
 // func (fe *frontendServer) getCart(ctx context.Context, userID string) ([]*pb.CartItem, error) {
 // 	resp, err := pb.NewCartServiceClient(fe.cartSvcConn).GetCart(ctx, &pb.GetCartRequest{UserId: userID})
 // 	return resp.GetItems(), err
@@ -47,21 +38,11 @@
 // 	return out, err
 // }
 
-// func (fe *frontendServer) getAd(ctx context.Context, ctxKeys []string) ([]*pb.Ad, error) {
-// 	ctx, cancel := context.WithTimeout(ctx, time.Millisecond*100)
-// 	defer cancel()
-
-// 	resp, err := pb.NewAdServiceClient(fe.adSvcConn).GetAds(ctx, &pb.AdRequest{
-// 		ContextKeys: ctxKeys,
-// 	})
-// 	return resp.GetAds(), errors.Wrap(err, "failed to get ads")
-// }
-
 package main
 
 import (
 	"context"
-	// "time" // Removed as we don't need timeouts for mocks
+	"time"
 
 	pb "github.com/GoogleCloudPlatform/microservices-demo/src/frontend/genproto"
 	"github.com/pkg/errors"
@@ -149,10 +130,11 @@ func (fe *frontendServer) getRecommendations(ctx context.Context, userID string,
 }
 
 func (fe *frontendServer) getAd(ctx context.Context, ctxKeys []string) ([]*pb.Ad, error) {
-	return []*pb.Ad{
-		{
-			RedirectUrl: "/product/1YMWWN1N4O",
-			Text:        "Ad: Check out our Watch!",
-		},
-	}, nil
+	ctx, cancel := context.WithTimeout(ctx, time.Millisecond*100)
+	defer cancel()
+
+	resp, err := pb.NewAdServiceClient(fe.adSvcConn).GetAds(ctx, &pb.AdRequest{
+		ContextKeys: ctxKeys,
+	})
+	return resp.GetAds(), errors.Wrap(err, "failed to get ads")
 }
