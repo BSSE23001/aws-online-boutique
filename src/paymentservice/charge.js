@@ -38,12 +38,6 @@ class ExpiredCreditCard extends CreditCardError {
   }
 }
 
-/**
- * Verifies the credit card number and (pretend) charges the card.
- *
- * @param {*} request
- * @return transaction_id - a random uuid.
- */
 module.exports = function charge (request) {
   const { amount, credit_card: creditCard } = request;
   const cardNumber = creditCard.credit_card_number;
@@ -55,7 +49,7 @@ module.exports = function charge (request) {
 
   if (!valid) { throw new InvalidCreditCard(); }
 
-  // Only VISA and mastercard is accepted, other card types (AMEX, dinersclub) will
+  // Only VISA and mastercard is accepted, other card types will
   // throw UnacceptedCreditCard error.
   if (!(cardType === 'visa' || cardType === 'mastercard')) { throw new UnacceptedCreditCard(cardType); }
 

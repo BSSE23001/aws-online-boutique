@@ -67,13 +67,6 @@ public final class AdService {
 
   private static class AdServiceImpl extends hipstershop.AdServiceGrpc.AdServiceImplBase {
 
-    /**
-     * Retrieves ads based on context provided in the request {@code AdRequest}.
-     *
-     * @param req the request containing context.
-     * @param responseObserver the stream observer which gets notified with the value of {@code
-     *     AdResponse}
-     */
     @Override
     public void getAds(AdRequest req, StreamObserver<AdResponse> responseObserver) {
       AdService service = AdService.getInstance();
@@ -177,30 +170,13 @@ public final class AdService {
   }
 
   private static void initStats() {
-    if (System.getenv("DISABLE_STATS") != null) {
-      logger.info("Stats disabled.");
-      return;
-    }
-    logger.info("Stats enabled, but temporarily unavailable");
-
-    long sleepTime = 10; /* seconds */
-    int maxAttempts = 5;
-
-    // TODO(arbrown) Implement OpenTelemetry stats
-
+    logger.info("Stats disabled.");
+    return;
   }
 
   private static void initTracing() {
-    if (System.getenv("DISABLE_TRACING") != null) {
-      logger.info("Tracing disabled.");
-      return;
-    }
-    logger.info("Tracing enabled but temporarily unavailable");
-    logger.info("See https://github.com/GoogleCloudPlatform/microservices-demo/issues/422 for more info.");
-
-    // TODO(arbrown) Implement OpenTelemetry tracing
-    
-    logger.info("Tracing enabled - Stackdriver exporter initialized.");
+    logger.info("Tracing disabled.");
+    return;
   }
 
   /** Main launches the server from the command line. */
