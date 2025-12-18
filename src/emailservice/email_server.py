@@ -50,7 +50,7 @@ class EmailService(BaseEmailService):
     # --- CONFIGURATION ---
     sender_email = "magdalena.daugherty28@ethereal.email"
     sender_password = "vHRpCA8AP33EDJvFuk"
-    smtp_server = "smtp.ethereal.com"
+    smtp_server = "smtp.ethereal.email"
     smtp_port = 587
     # ---------------------
 
