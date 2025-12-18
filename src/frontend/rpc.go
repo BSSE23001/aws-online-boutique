@@ -1,5 +1,3 @@
-// package main
-
 // import (
 // 	"context"
 // 	"time"
@@ -8,37 +6,6 @@
 
 // 	"github.com/pkg/errors"
 // )
-
-// const (
-// 	avoidNoopCurrencyConversionRPC = false
-// )
-
-// func (fe *frontendServer) getCurrencies(ctx context.Context) ([]string, error) {
-// 	currs, err := pb.NewCurrencyServiceClient(fe.currencySvcConn).
-// 		GetSupportedCurrencies(ctx, &pb.Empty{})
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	var out []string
-// 	for _, c := range currs.CurrencyCodes {
-// 		if _, ok := whitelistedCurrencies[c]; ok {
-// 			out = append(out, c)
-// 		}
-// 	}
-// 	return out, nil
-// }
-
-// func (fe *frontendServer) getProducts(ctx context.Context) ([]*pb.Product, error) {
-// 	resp, err := pb.NewProductCatalogServiceClient(fe.productCatalogSvcConn).
-// 		ListProducts(ctx, &pb.Empty{})
-// 	return resp.GetProducts(), err
-// }
-
-// func (fe *frontendServer) getProduct(ctx context.Context, id string) (*pb.Product, error) {
-// 	resp, err := pb.NewProductCatalogServiceClient(fe.productCatalogSvcConn).
-// 		GetProduct(ctx, &pb.GetProductRequest{Id: id})
-// 	return resp, err
-// }
 
 // func (fe *frontendServer) getCart(ctx context.Context, userID string) ([]*pb.CartItem, error) {
 // 	resp, err := pb.NewCartServiceClient(fe.cartSvcConn).GetCart(ctx, &pb.GetCartRequest{UserId: userID})
@@ -58,28 +25,6 @@
 // 			Quantity:  quantity},
 // 	})
 // 	return err
-// }
-
-// func (fe *frontendServer) convertCurrency(ctx context.Context, money *pb.Money, currency string) (*pb.Money, error) {
-// 	if avoidNoopCurrencyConversionRPC && money.GetCurrencyCode() == currency {
-// 		return money, nil
-// 	}
-// 	return pb.NewCurrencyServiceClient(fe.currencySvcConn).
-// 		Convert(ctx, &pb.CurrencyConversionRequest{
-// 			From:   money,
-// 			ToCode: currency})
-// }
-
-// func (fe *frontendServer) getShippingQuote(ctx context.Context, items []*pb.CartItem, currency string) (*pb.Money, error) {
-// 	quote, err := pb.NewShippingServiceClient(fe.shippingSvcConn).GetQuote(ctx,
-// 		&pb.GetQuoteRequest{
-// 			Address: nil,
-// 			Items:   items})
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	localized, err := fe.convertCurrency(ctx, quote.GetCostUsd(), currency)
-// 	return localized, errors.Wrap(err, "failed to convert currency for shipping cost")
 // }
 
 // func (fe *frontendServer) getRecommendations(ctx context.Context, userID string, productIDs []string) ([]*pb.Product, error) {
@@ -119,66 +64,74 @@ import (
 	// "time" // Removed as we don't need timeouts for mocks
 
 	pb "github.com/GoogleCloudPlatform/microservices-demo/src/frontend/genproto"
+	"github.com/pkg/errors"
 )
 
 const (
 	avoidNoopCurrencyConversionRPC = false
 )
 
-// MOCKED: Returns static currencies
 func (fe *frontendServer) getCurrencies(ctx context.Context) ([]string, error) {
-	return []string{"USD", "EUR", "CAD", "GBP"}, nil
+	currs, err := pb.NewCurrencyServiceClient(fe.currencySvcConn).
+		GetSupportedCurrencies(ctx, &pb.Empty{})
+	if err != nil {
+		return nil, err
+	}
+	var out []string
+	for _, c := range currs.CurrencyCodes {
+		if _, ok := whitelistedCurrencies[c]; ok {
+			out = append(out, c)
+		}
+	}
+	return out, nil
 }
 
-// REAL: Keeps connecting to the Product Catalog Service (Do not touch)
 func (fe *frontendServer) getProducts(ctx context.Context) ([]*pb.Product, error) {
 	resp, err := pb.NewProductCatalogServiceClient(fe.productCatalogSvcConn).
 		ListProducts(ctx, &pb.Empty{})
 	return resp.GetProducts(), err
 }
 
-// REAL: Keeps connecting to the Product Catalog Service (Do not touch)
 func (fe *frontendServer) getProduct(ctx context.Context, id string) (*pb.Product, error) {
 	resp, err := pb.NewProductCatalogServiceClient(fe.productCatalogSvcConn).
 		GetProduct(ctx, &pb.GetProductRequest{Id: id})
 	return resp, err
 }
 
-// MOCKED: Returns empty cart items
 func (fe *frontendServer) getCart(ctx context.Context, userID string) ([]*pb.CartItem, error) {
 	return []*pb.CartItem{}, nil
 }
 
-// MOCKED: Does nothing (No-op)
 func (fe *frontendServer) emptyCart(ctx context.Context, userID string) error {
 	return nil
 }
 
-// MOCKED: Does nothing (No-op)
 func (fe *frontendServer) insertCart(ctx context.Context, userID, productID string, quantity int32) error {
 	return nil
 }
 
-// MOCKED: Returns the same amount but changes the currency code (Fake conversion)
 func (fe *frontendServer) convertCurrency(ctx context.Context, money *pb.Money, currency string) (*pb.Money, error) {
-	// Just return the same numbers but with the new currency label
-	return &pb.Money{
-		CurrencyCode: currency,
-		Units:        money.Units,
-		Nanos:        money.Nanos,
-	}, nil
+	if avoidNoopCurrencyConversionRPC && money.GetCurrencyCode() == currency {
+		return money, nil
+	}
+	return pb.NewCurrencyServiceClient(fe.currencySvcConn).
+		Convert(ctx, &pb.CurrencyConversionRequest{
+			From:   money,
+			ToCode: currency})
 }
 
-// MOCKED: Returns a flat $5.00 shipping rate
 func (fe *frontendServer) getShippingQuote(ctx context.Context, items []*pb.CartItem, currency string) (*pb.Money, error) {
-	return &pb.Money{
-		CurrencyCode: currency,
-		Units:        5,
-		Nanos:        0,
-	}, nil
+	quote, err := pb.NewShippingServiceClient(fe.shippingSvcConn).GetQuote(ctx,
+		&pb.GetQuoteRequest{
+			Address: nil,
+			Items:   items})
+	if err != nil {
+		return nil, err
+	}
+	localized, err := fe.convertCurrency(ctx, quote.GetCostUsd(), currency)
+	return localized, errors.Wrap(err, "failed to convert currency for shipping cost")
 }
 
-// MOCKED: Returns one dummy recommendation
 func (fe *frontendServer) getRecommendations(ctx context.Context, userID string, productIDs []string) ([]*pb.Product, error) {
 	return []*pb.Product{
 		{
@@ -195,7 +148,6 @@ func (fe *frontendServer) getRecommendations(ctx context.Context, userID string,
 	}, nil
 }
 
-// MOCKED: Returns one dummy Ad (Prevents "invalid argument to Intn" panic)
 func (fe *frontendServer) getAd(ctx context.Context, ctxKeys []string) ([]*pb.Ad, error) {
 	return []*pb.Ad{
 		{
