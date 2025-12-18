@@ -1,23 +1,3 @@
-// func (fe *frontendServer) getCart(ctx context.Context, userID string) ([]*pb.CartItem, error) {
-// 	resp, err := pb.NewCartServiceClient(fe.cartSvcConn).GetCart(ctx, &pb.GetCartRequest{UserId: userID})
-// 	return resp.GetItems(), err
-// }
-
-// func (fe *frontendServer) emptyCart(ctx context.Context, userID string) error {
-// 	_, err := pb.NewCartServiceClient(fe.cartSvcConn).EmptyCart(ctx, &pb.EmptyCartRequest{UserId: userID})
-// 	return err
-// }
-
-// func (fe *frontendServer) insertCart(ctx context.Context, userID, productID string, quantity int32) error {
-// 	_, err := pb.NewCartServiceClient(fe.cartSvcConn).AddItem(ctx, &pb.AddItemRequest{
-// 		UserId: userID,
-// 		Item: &pb.CartItem{
-// 			ProductId: productID,
-// 			Quantity:  quantity},
-// 	})
-// 	return err
-// }
-
 // func (fe *frontendServer) getRecommendations(ctx context.Context, userID string, productIDs []string) ([]*pb.Product, error) {
 // 	resp, err := pb.NewRecommendationServiceClient(fe.recommendationSvcConn).ListRecommendations(ctx,
 // 		&pb.ListRecommendationsRequest{UserId: userID, ProductIds: productIDs})
@@ -80,15 +60,23 @@ func (fe *frontendServer) getProduct(ctx context.Context, id string) (*pb.Produc
 }
 
 func (fe *frontendServer) getCart(ctx context.Context, userID string) ([]*pb.CartItem, error) {
-	return []*pb.CartItem{}, nil
+	resp, err := pb.NewCartServiceClient(fe.cartSvcConn).GetCart(ctx, &pb.GetCartRequest{UserId: userID})
+	return resp.GetItems(), err
 }
 
 func (fe *frontendServer) emptyCart(ctx context.Context, userID string) error {
-	return nil
+	_, err := pb.NewCartServiceClient(fe.cartSvcConn).EmptyCart(ctx, &pb.EmptyCartRequest{UserId: userID})
+	return err
 }
 
 func (fe *frontendServer) insertCart(ctx context.Context, userID, productID string, quantity int32) error {
-	return nil
+	_, err := pb.NewCartServiceClient(fe.cartSvcConn).AddItem(ctx, &pb.AddItemRequest{
+		UserId: userID,
+		Item: &pb.CartItem{
+			ProductId: productID,
+			Quantity:  quantity},
+	})
+	return err
 }
 
 func (fe *frontendServer) convertCurrency(ctx context.Context, money *pb.Money, currency string) (*pb.Money, error) {
